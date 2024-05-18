@@ -31,6 +31,7 @@ def get_arg_parser(parser=None):
     group.add_argument(
         "--wait_for_clients_timeout", type=int, required=False, default=600
     )
+    group.add_argument("--num_rounds", default=3, type=int, required=False, help="Number of rounds to run")
 
     return parser
 
@@ -67,6 +68,7 @@ def run_server(
     expected_clients,
     output_dir,
     wait_for_clients_timeout=600,
+    num_rounds = 3,
 ):
     """Runs the server communication process.
 
@@ -117,7 +119,7 @@ def run_server(
     # Start Flower server
     fl.server.start_server(
         server_address=f"{server_ip}:8080",
-        config=fl.server.ServerConfig(num_rounds=3),
+        config=fl.server.ServerConfig(num_rounds=num_rounds),
         strategy=strategy,
     )
 
@@ -145,6 +147,7 @@ def main():
         args.federation_identifier,
         args.expected_clients,
         args.output_dir,
+        args.num_rounds,
     )
 
 

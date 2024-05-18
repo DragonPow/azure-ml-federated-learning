@@ -29,11 +29,12 @@ from torchvision.transforms import ToTensor, Normalize, Compose, Grayscale, Resi
 
 import flwr as fl
 from pneumonia_network import PneumoniaNetwork
+from mnist_network import MnistNetwork
 
 
 class PTLearner:
     def __init__(
-        self, dataset_dir, lr=0.01, epochs=5, experiment_name="default-experiment"
+        self, dataset_dir, model_client, lr=0.01, epochs=5, experiment_name="default-experiment"
     ):
         """Simple PyTorch Learner.
         Args:
@@ -57,7 +58,7 @@ class PTLearner:
         self._experiment_name = experiment_name
 
         # Training setup
-        self.model_ = PneumoniaNetwork()
+        self.model_ = model_client
         self.device_ = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model_.to(self.device_)
         self.loss_ = nn.CrossEntropyLoss()
@@ -296,8 +297,24 @@ def get_arg_parser(parser=None):
     parser.add_argument(
         "--metrics_prefix", type=str, required=False, help="Metrics prefix."
     )
+    parser.add_argument(
+        "--model_client", 
+        choices=["pneumonia", "mnist"],
+        default="pneumonia",
+        type=str, 
+        required=False, 
+        help="Model client."
+    )
 
     return parser
+
+def get_model_client(model_client: str):
+    if model_client == "pneumonia":
+        return PneumoniaNetwork()
+    elif model_client == "mnist":
+        return MnistNetwork()
+    else:
+        raise ValueError(f"Invalid model client: {model_client}")
 
 
 def main(cli_args=None):
@@ -323,6 +340,7 @@ def main(cli_args=None):
     # original class from pneumonia example
     trainer = PTLearner(
         dataset_dir=args.client_data,
+        model_client=get_model_client(args.model_client),
         lr=args.lr,
         epochs=args.epochs,
         experiment_name=args.metrics_prefix,
